@@ -1,33 +1,3 @@
-********************************************************************************
-*                                                                              *
-* Title    Laeven and Valencia (2018) Banking Crises Database Acquisition      *
-* @author  Alessandro Pizzigolotto (NHH)                                       *
-* @project BankingCrisisDB                                                     *
-*                                                                              *
-* Description: This script is able to download the original Laeven and         *
-*   Valencia Systemic Banking Crises Database from the IMF Original Article,   *
-*   and re-elaborate the Excel File information such that it creates a spell   *
-*   dataset (in .dta format) for which each country has a systemic banking     *
-*   crisis entry, the number of the crisis, the main effects of the crises and *
-*   flags for whether there are multiple crises other than the considered one. *
-*   To uniquely identify countries, we are using the ISO 1366-1 Numeric Code   *
-*   format, in a way that it is possible to link the dataset to other sources, *
-*   especially in Stata through the community-written command 'kountry'.       *
-*                                                                              *
-*   Small Update: We complement the Laeven and Valencia Systemic Banking       *
-*   Database with the Behavioral Finance and Financial Stability Project       *
-*   Banking and Systemic Crises Database building on the original Reinhart and *
-*   Rogoff 'This Time is Different' Database. This gives us a more extended    *
-*   spell data series (we drop it below 1950) and other countries, and it      *
-*   allows us to add other countries.                                          *
-*                                                                              *
-* P.S.: It does not work locally, you should be able to connect to the web.    *
-*                                                                              *
-********************************************************************************
-
-********************************************************************************
-* Preliminary Commands                                                         *
-********************************************************************************
 clear all
 capture log close
 set more off
@@ -38,22 +8,9 @@ set matsize 11000
 * for Stata in my poor Linux
 set max_memory 6g
 
-********************************************************************************
-* Dependencies                                                                 *
-********************************************************************************
-
-* User-Written Command 'kountry', (c) to Raciborski (2008).
-* for more info, https://journals.sagepub.com/doi/pdf/10.1177/1536867X0800800305
 capture ssc install kountry
 capture net install gr0034, from(http://www.stata-journal.com/software/sj8-2)
 
-********************************************************************************
-* Environment Variables Definition                                             *
-* Rule-of-Thumb: PATHNAME do not finish with 'slash'                           *
-********************************************************************************
-
-* change here the absolute PATHNAME of your workspace
-* this script is supposed to be located into ~/src, but does not really matter
 gl BASE_PATH = "C:\Users\user\Downloads\BankingCrisis"
 
 * directories and pointers definition
@@ -67,9 +24,6 @@ forvalues i = 1/`n' {
     capture mkdir "${``i''_PATH}", pub
 }
 
-********************************************************************************
-* Log Opening and Settings                                                     *
-********************************************************************************
 
 * generate pseudo timestamp
 gl T_STRING = subinstr("`c(current_date)'"+"_"+"`c(current_time)'", ":", "_", .)
@@ -78,9 +32,6 @@ gl T_STRING = subinstr("${T_STRING}", " ", "_", .)
 * open log file
 capture log using "${LOG_PATH}/BankingCrisisDB_${T_STRING}", text replace
 
-********************************************************************************
-* Copy and Unzip Excel File from IMF Source                                    *
-********************************************************************************
 
 * download from IMF Economic Review Website
 copy ///
@@ -90,9 +41,6 @@ copy ///
 * just because I feel safe in the workspace
 cd "${BASE_PATH}"
 
-********************************************************************************
-* Data Importing from Excel Dataset (a bit redundant but it works).            *
-********************************************************************************
 
 * Crisis Years Sheet, saved in a tempfile
 import excel using "${DATA_PATH}/source.xlsx", ///
@@ -226,10 +174,6 @@ drop cnames
 tempfile ceffect
 save `ceffect'
 
-********************************************************************************
-* Generation of the Dataset on Systemic Banking Crises and Consequences.       *
-*   We create a flag for the presence of multiple (correlated crises).         *
-********************************************************************************
 
 * initialize crises years dataset
 u `cyears', clear
@@ -263,11 +207,6 @@ foreach crisis in `listcrises' {
     save `aggregate'
     restore
 }
-
-********************************************************************************
-* Data Importing directly from the Behavioral Finance and Financial Stability  *
-*   Project Website and Spell Dataset Generation.                              *
-********************************************************************************
 
 * Harvard Kennedy School Direct Link
 import excel using ///
